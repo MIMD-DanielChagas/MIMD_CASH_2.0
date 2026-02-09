@@ -1,6 +1,7 @@
-import React from 'react';
-import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import React, { useState } from 'react';
+import { CredentialResponse } from '@react-oauth/google';
+import GoogleLoginComponent from './components/GoogleLogin';
+import './App.css';
 
 interface UserData {
   name: string;
@@ -9,42 +10,53 @@ interface UserData {
   sub: string;
 }
 
-interface GoogleLoginComponentProps {
-  onLoginSuccess: (userData: UserData, credentialResponse: CredentialResponse) => void;
-}
+function App() {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-const GoogleLoginComponent: React.FC<GoogleLoginComponentProps> = ({ onLoginSuccess }) => {
-  const handleSuccess = async (credentialResponse: CredentialResponse) => {
-    try {
-      // Decodificar o JWT para obter informações do usuário
-      const decoded = jwtDecode<UserData>(credentialResponse.credential as string);
-      
-      console.log('Usuário autenticado:', decoded);
-      
-      // Chamar função de sucesso
-      onLoginSuccess(decoded, credentialResponse);
-    } catch (error) {
-      console.error('Erro ao processar login:', error);
-    }
+  const handleLoginSuccess = (userData: UserData, credentialResponse: CredentialResponse) => {
+    setUser(userData);
+    setToken(credentialResponse.credential as string);
+    console.log('Token:', credentialResponse.credential);
+    // Aqui você pode fazer requisições ao Google Sheets
   };
 
-  const handleError = () => {
-    console.log('Falha no login');
+  const handleLogout = () => {
+    setUser(null);
+    setToken(null);
   };
 
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
-      <div style={{ textAlign: 'center', padding: '20px' }}>
-        <h2>Conectar com Google</h2>
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={handleError}
-          text="signin_with"
-          size="large"
-        />
-      </div>
-    </GoogleOAuthProvider>
+    <div className="App">
+      {!user ? (
+        <GoogleLoginComponent onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <h2>Bem-vindo, {user.name}!</h2>
+          <img 
+            src={user.picture} 
+            alt={user.name} 
+            style={{ borderRadius: '50%', width: '100px', height: '100px' }}
+          />
+          <p>Email: {user.email}</p>
+          <button 
+            onClick={handleLogout}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Sair
+          </button>
+        </div>
+      )}
+    </div>
   );
-};
+}
 
-export default GoogleLoginComponent;
+export default App;
