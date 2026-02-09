@@ -1,0 +1,7 @@
+{
+  "name": "HospedaFinance - Gestão Hoteleira",
+  "description": "Sistema completo de gestão financeira para meios de hospedagem, com controle de fluxo de caixa, DRE automatizado e dashboards profissionais.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
