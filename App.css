@@ -1,0 +1,54 @@
+.App {
+  text-align: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.App h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.App img {
+  margin: 20px 0;
+}
+
+.App p {
+  color: #666;
+  font-size: 16px;
+}
+
+.App button {
+  margin: 10px 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.App button:hover {
+  opacity: 0.8;
+}
+
+.App button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.App table {
+  margin-top: 20px;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.App table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.App table tr:first-child td {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
