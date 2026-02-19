@@ -1,70 +1,114 @@
-
 export enum TransactionType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',
   TRANSFER = 'TRANSFER'
 }
 
+export enum TransactionStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
+
+export enum RepeatType {
+  NONE = 'NONE',
+  FIXO = 'FIXO',
+  PARCELADO = 'PARCELADO'
+}
+
 export interface Category {
   id: string;
-  name: string;
-  parentId?: 'hospedagem' | 'outras_receitas'; // Identificador da categoria pai para Entradas
-}
-
-export interface PaymentMethod {
-  id: string;
-  name: string;
-  fee: number;
-}
-
-export interface Account {
-  id: string;
-  name: string;
-  balance: number;
+  nome_categoria: string;
+  descricao: string;
+  ativa: boolean;
+  parentId?: string;
 }
 
 export interface Origin {
   id: string;
   name: string;
-  fee: number;
+  descricao?: string;
+  ativa: boolean;
+}
+
+export interface PaymentMethod {
+  id: string;
+  nome_metodo: string;
+  descricao: string;
+  ativa: boolean;
+}
+
+export interface Account {
+  id: string;
+  nome_banco: string;
+  agencia: string;
+  numero_conta: string;
+  saldo_inicial: number;
+  saldo_atual: number;
+  data_criacao: string;
 }
 
 export interface Supplier {
   id: string;
-  name: string;
+  nome: string;
+  email?: string;
+  telefone?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  data_criacao: string;
+  ativa: boolean;
 }
 
 export interface Transaction {
   id: string;
-  type: TransactionType;
-  value: number;
-  description: string;
-  date: string;
-  categoryId: string;
-  paymentMethodId: string;
-  accountId: string; // Target account for Income, Source for Expense
-  targetAccountId?: string; // Only for Transfer
-  supplierId?: string; // Only for Expense
-  
-  // Specific for Income
-  mainCategoryId?: 'hospedagem' | 'outras_receitas';
+  data: string;
+  descricao: string;
+  valor: number;
+  tipo: TransactionType;
+  categoria: string;
+  metodo_pagamento: string;
+  conta: string;
+  status: TransactionStatus;
+  fornecedor?: string;
+  notas?: string;
+  anexo?: string;
+  data_vencimento?: string;
+  data_pagamento?: string;
+  repeticao?: RepeatType;
+  parcelas?: number;
+  comissao_percent?: number;
+  check_in?: string;
+  check_out?: string;
+  hospedes?: number;
+  origem?: string;
+  type?: TransactionType;
+  mainCategoryId?: string;
+  targetAccountId?: string;
+  paymentMethodId?: string;
+  supplierId?: string;
   checkIn?: string;
   checkOut?: string;
-  guests?: number;
-  originId?: string;
-  commissionPercent?: number;
-  
-  notes?: string;
-  attachment?: string;
-  repeatType?: 'FIXO' | 'PARCELADO' | 'NONE';
-  installments?: number;
+}
+
+export interface DREReport {
+  total_receitas: number;
+  total_despesas: number;
+  lucro_liquido: number;
+  margem_lucro: number;
 }
 
 export interface AppConfig {
-  companyName: string;
-  logoUrl: string;
-  googleDriveFolder: string;
-  googleSheetsLink: string;
+  id?: string;
+  nome_empresa?: string;
+  foto_url?: string;
+  email?: string;
+  telefone?: string;
+  data_criacao?: string;
+  spreadsheetId?: string;
+  spreadsheetName?: string;
+  companyName?: string;
+  logoUrl?: string;
 }
 
 export interface AppState {
@@ -73,7 +117,8 @@ export interface AppState {
   expenseCategories: Category[];
   accounts: Account[];
   paymentMethods: PaymentMethod[];
-  origins: Origin[];
   suppliers: Supplier[];
+  origins: Origin[];
   transactions: Transaction[];
+  dre?: DREReport;
 }

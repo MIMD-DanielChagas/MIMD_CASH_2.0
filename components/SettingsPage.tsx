@@ -1,6 +1,5 @@
-
 import React, { useRef } from 'react';
-import { Save, Building, Image as ImageIcon, Link as LinkIcon, Camera, Database, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
+import { Save, Building, Image as ImageIcon, Link as LinkIcon, Camera, Database, FileSpreadsheet, CheckCircle2, AlertCircle } from 'lucide-react';
 import { AppConfig } from '../types';
 
 interface SettingsPageProps {
@@ -22,7 +21,75 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ config, updateConfig }) => 
     }
   };
 
-  const isConnected = config.googleSheetsLink && config.googleSheetsLink.includes('docs.google.com/spreadsheets');
+  // Função para extrair ID da planilha do link
+  const extractSpreadsheetId = (url: string): string | null => {
+    try {
+      const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : null;
+    } catch (error) {
+      console.error('Erro ao extrair ID da planilha:', error);
+      return null;
+    }
+  };
+
+  // Função para extrair ID da pasta do Drive
+  const extractFolderId = (url: string): string | null => {
+    try {
+      const match = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : null;
+    } catch (error) {
+      console.error('Erro ao extrair ID da pasta:', error);
+      return null;
+    }
+  };
+
+  const handleGoogleSheetsLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const link = e.target.value;
+    updateConfig({ googleSheetsLink: link });
+
+    // Extrair e salvar o spreadsheetId automaticamente
+    if (link.includes('docs.google.com/spreadsheets')) {
+      const spreadsheetId = extractSpreadsheetId(link);
+      if (spreadsheetId) {
+        console.log('✅ ID da planilha extraído:', spreadsheetId);
+        updateConfig({ spreadsheetId });
+      }
+    }
+  };
+
+  const handleGoogleDriveFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const link = e.target.value;
+    updateConfig({ googleDriveFolder: link });
+
+    // Extrair e salvar o folderId automaticamente
+    if (link.includes('drive.google.com/drive/folders')) {
+      const folderId = extractFolderId(link);
+      if (folderId) {
+        console.log('✅ ID da pasta extraído:', folderId);
+        updateConfig({ googleDriveFolderId: folderId });
+      }
+    }
+  };
+
+  const handleSaveSettings = () => {
+    // Salvar configurações no localStorage
+    const companyData = {
+      companyName: config.companyName,
+      logoUrl: config.logoUrl,
+      googleSheetsLink: config.googleSheetsLink,
+      spreadsheetId: config.spreadsheetId,
+      googleDriveFolder: config.googleDriveFolder,
+      googleDriveFolderId: config.googleDriveFolderId,
+      setupDate: new Date().toISOString(),
+    };
+
+    localStorage.setItem('companyData', JSON.stringify(companyData));
+    console.log('✅ Configurações salvas com sucesso!');
+    alert('✅ Configurações salvas com sucesso!');
+  };
+
+  const isGoogleSheetsConnected = config.spreadsheetId && config.spreadsheetId.length > 0;
+  const isGoogleDriveConnected = config.googleDriveFolderId && config.googleDriveFolderId.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -65,7 +132,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ config, updateConfig }) => 
                 </label>
                 <input 
                   type="text" 
-                  value={config.companyName}
+                  value={config.companyName || ''}
                   onChange={e => updateConfig({ companyName: e.target.value })}
                   className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 text-lg shadow-inner"
                   placeholder="Ex: Pousada Recanto dos Sonhos"
@@ -86,6 +153,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ config, updateConfig }) => 
         </div>
 
         <div className="p-10 space-y-8">
+          {/* Google Sheets Link */}
           <div className="space-y-4">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
               <FileSpreadsheet size={14} className="text-emerald-500" /> Link do Arquivo Google Sheets
@@ -93,37 +161,68 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ config, updateConfig }) => 
             <div className="relative">
               <input 
                 type="text" 
-                value={config.googleSheetsLink}
-                onChange={e => updateConfig({ googleSheetsLink: e.target.value })}
+                value={config.googleSheetsLink || ''}
+                onChange={handleGoogleSheetsLinkChange}
                 className="w-full p-5 pl-14 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs text-gray-600 shadow-inner"
                 placeholder="https://docs.google.com/spreadsheets/d/SEU_ID_AQUI/edit"
               />
               <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
             </div>
             
-            {isConnected ? (
+            {isGoogleSheetsConnected ? (
               <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-100 animate-in fade-in slide-in-from-left-2">
                 <CheckCircle2 size={18} />
-                <span className="text-xs font-black uppercase tracking-widest">Link Validado com Sucesso</span>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-widest block">Link Validado com Sucesso</span>
+                  <span className="text-[10px] text-emerald-500 font-mono">ID: {config.spreadsheetId?.substring(0, 20)}...</span>
+                </div>
+              </div>
+            ) : config.googleSheetsLink ? (
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-xl border border-amber-100">
+                <AlertCircle size={18} />
+                <span className="text-xs font-black uppercase tracking-widest">Link inválido. Verifique o formato.</span>
               </div>
             ) : (
               <div className="text-[10px] text-gray-400 font-medium italic px-4">
-                * Certifique-se de que a planilha segue o modelo de colunas padrão do HospedaFinance.
+                * Cole o link completo da sua planilha do Google Sheets (https://docs.google.com/spreadsheets/d/...)
               </div>
             )}
           </div>
 
-          <div className="space-y-2">
+          {/* Google Drive Folder */}
+          <div className="space-y-4">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
               <LinkIcon size={14} /> Pasta de Anexos (Google Drive)
             </label>
-            <input 
-              type="text" 
-              value={config.googleDriveFolder}
-              onChange={e => updateConfig({ googleDriveFolder: e.target.value })}
-              className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm text-gray-500 shadow-inner"
-              placeholder="ID da pasta para salvar comprovantes..."
-            />
+            <div className="relative">
+              <input 
+                type="text" 
+                value={config.googleDriveFolder || ''}
+                onChange={handleGoogleDriveFolderChange}
+                className="w-full p-5 pl-14 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs text-gray-600 shadow-inner"
+                placeholder="https://drive.google.com/drive/folders/SEU_ID_AQUI"
+              />
+              <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+            </div>
+
+            {isGoogleDriveConnected ? (
+              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-100 animate-in fade-in slide-in-from-left-2">
+                <CheckCircle2 size={18} />
+                <div>
+                  <span className="text-xs font-black uppercase tracking-widest block">Pasta Conectada com Sucesso</span>
+                  <span className="text-[10px] text-emerald-500 font-mono">ID: {config.googleDriveFolderId?.substring(0, 20)}...</span>
+                </div>
+              </div>
+            ) : config.googleDriveFolder ? (
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-3 rounded-xl border border-amber-100">
+                <AlertCircle size={18} />
+                <span className="text-xs font-black uppercase tracking-widest">Link inválido. Verifique o formato.</span>
+              </div>
+            ) : (
+              <div className="text-[10px] text-gray-400 font-medium italic px-4">
+                * Cole o link da pasta do Google Drive (https://drive.google.com/drive/folders/...)
+              </div>
+            )}
           </div>
           
           <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
@@ -138,6 +237,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ config, updateConfig }) => 
 
         <div className="p-10 bg-gray-50 border-t border-gray-100 flex justify-end">
            <button 
+            onClick={handleSaveSettings}
             className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white px-10 py-5 rounded-2xl font-black text-lg transition-all shadow-xl active:scale-95"
            >
              <Save size={24} />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   X, 
@@ -39,7 +38,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, initialData, st
   const [paymentMethodId, setPaymentMethodId] = useState(initialData?.paymentMethodId || '');
   
   const [supplierId, setSupplierId] = useState(initialData?.supplierId || '');
-  const [supplierSearch, setSupplierSearch] = useState(state.suppliers.find(s => s.id === (initialData?.supplierId))?.name || '');
+  const [supplierSearch, setSupplierSearch] = useState((state.suppliers || []).find(s => s.id === (initialData?.supplierId))?.name || '');
   const [showSupplierResults, setShowSupplierResults] = useState(false);
 
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
@@ -107,8 +106,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, initialData, st
   };
 
   const filteredSubcategories = type === TransactionType.INCOME 
-    ? state.incomeCategories.filter(c => c.parentId === mainCategoryId)
-    : state.expenseCategories;
+    ? (state.incomeCategories || []).filter(c => c.parentId === mainCategoryId)
+    : (state.expenseCategories || []);
 
   const selectSupplier = (s: Supplier) => {
     setSupplierId(s.id);
@@ -372,7 +371,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, initialData, st
                     <input type="text" placeholder="Buscar Fornecedor..." value={supplierSearch} onFocus={() => { setIsValueFocused(false); setShowSupplierResults(true); }} onChange={(e) => { setSupplierSearch(e.target.value); setSupplierId(''); setShowSupplierResults(true); }} className={`w-full pl-16 pr-12 py-5 bg-gray-50 border border-gray-100 rounded-full font-bold text-gray-700 shadow-sm`} />
                     {showSupplierResults && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-[2rem] shadow-2xl z-50 max-h-48 overflow-y-auto p-2">
-                        {state.suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase())).map(s => (
+                        {(state.suppliers || []).filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase())).map(s => (
                           <button key={s.id} type="button" onClick={() => selectSupplier(s)} className="w-full text-left p-4 hover:bg-gray-50 rounded-2xl transition-colors font-bold text-gray-700">{s.name}</button>
                         ))}
                       </div>
@@ -413,7 +412,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, initialData, st
                   required
                 >
                   <option value="">{type === TransactionType.TRANSFER ? 'CONTA DE ORIGEM' : 'MÉTODO DE PAGAMENTO'}</option>
-                  {(type === TransactionType.TRANSFER ? state.accounts : state.paymentMethods).map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
+                  {(type === TransactionType.TRANSFER ? (state.accounts || []) : (state.paymentMethods || [])).map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
                 </select>
               </div>
               <div className="relative">
@@ -426,7 +425,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ type, initialData, st
                   required
                 >
                   <option value="">{type === TransactionType.TRANSFER ? 'CONTA DE DESTINO' : 'CONTA FINANCEIRA'}</option>
-                  {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name.toUpperCase()}</option>)}
+                  {(state.accounts || []).map(a => <option key={a.id} value={a.id}>{a.name.toUpperCase()}</option>)}
                 </select>
               </div>
             </div>
